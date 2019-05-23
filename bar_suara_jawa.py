@@ -1,41 +1,8 @@
-# import libraries
-from bs4 import BeautifulSoup
-import urllib.request
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import csv
-import time
-import pandas as pd
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-# specify the url
-url = 'https://kawalpemilu.org/#pilpres:0'
+import function as func
 
-# The path to where you have your chrome webdriver stored:
-webdriver_path = '/Users/macbook/Downloads/chromedriver'
-
-# Add arguments telling Selenium to not actually open a window
-chrome_options = Options()
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--window-size=1920x1080')
-
-# Fire up the headless browser
-browser = webdriver.Chrome(executable_path=webdriver_path,
-                           options=chrome_options)
-
-# Load webpage
-browser.get(url)
-
-# It can be a good idea to wait for a few seconds before trying to parse the page
-# to ensure that the page has loaded completely.
-time.sleep(10)
-
-# Parse HTML, close browser
-soup = BeautifulSoup(browser.page_source, 'html.parser')
-# print(soup)
-pretty = soup.prettify()
-browser.quit()
+soup = func.crawlData('https://kawalpemilu.org/#0')
 # find results within table
 results = soup.find('table',{'class':'table'})
 rows = results.find_all('tr',{'class':'row'})
@@ -43,7 +10,6 @@ array = []
 jokowi = [0,0]
 prabowo = [0,0]
 jawa = ['DKI JAKARTA','JAWA BARAT','JAWA TENGAH','DAERAH ISTIMEWA YOGYAKARTA','JAWA TIMUR','BANTEN']
-
 
 # print(rows)
 for r in rows:
@@ -71,22 +37,26 @@ for r in rows:
             jokowi[1]+=satu
             prabowo[1]+=dua
 
+# math percentage
+total = sum(jokowi) + sum (prabowo)
+satu_jawa = jokowi[0] / total * 100
+jokowi[0] = satu_jawa
+satu_nonjawa = jokowi[1] / total *100
+jokowi[1] = satu_nonjawa
+dua_jawa = prabowo[0] / total * 100
+prabowo[0] = dua_jawa
+dua_nonjawa = prabowo[1] / total * 100
+prabowo[1] = dua_nonjawa
 
 # Convert to numpy
 np_array = np.array(array)
 np_jokowi= np.array(jokowi)
 np_prabowo= np.array(prabowo)
-
-
-
 # plot data
 fig,ax = plt.subplots(figsize=(10,5))
-# fig,ax = plt.subplots()
 # print(ax)
 pos = list(range(len(np_jokowi)))
 width = 0.25
-
-# print(ind-width/2)
 
 rects1 = ax.bar(pos,np_jokowi,width,color='red',label='Jokowi 2019')
 rects2 = ax.bar([p + width for p in pos],np_prabowo,width,color='blue',label='Prabowo 2019')
@@ -96,26 +66,12 @@ ax.set_xticklabels(['Jawa','Non Jawa'])
 # # Naming label
 plt.xlabel('provinsi')
 plt.ylabel('perolehan suara')
-# Set Text Value
-def autolabel(rects):
-    """
-    Attach a text label above each bar displaying its height
-    """
-    for rect in rects:
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2., height,
-                '%d' % int(height),
-                ha='center', va='bottom')
 
-autolabel(rects1)
-autolabel(rects2)
+func.setPlotText(np.round(np_jokowi,2), x=0, y=0.6, val='%', halign='center')
+func.setPlotText(np.round(np_prabowo,2), x=width, y=0.6, val='%', halign='center')
 # # styling x,y value
-# plt.xticks(rotation=30,ha='right')
 plt.yticks(np.arange(np_jokowi.min(),np_jokowi.max(),4000000))
 plt.legend(loc='upper right')
 plt.yscale('linear')
-
-
 plt.show()
-
 

@@ -6,7 +6,8 @@ import numpy as np
 men_means, men_std = [20, 35, 30, 35, 27], [2, 3, 4, 1, 2]
 women_means, women_std = [25, 32, 34, 20, 25], [3, 5, 2, 3, 3]
 
-
+men_total = sum(men_means) + sum(women_means)
+print(men_total)
 ind = np.arange(len(men_means))  # the x locations for the groups
 width = 0.35  # the width of the bars
 # ind=np.arange(1,5,step=2)
