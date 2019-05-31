@@ -21,32 +21,39 @@ for r in rows:
     # Remove white space
     total = total.replace(' ','')
     # remove \n (newline)
-    provinsi = provinsi.replace('\n','')
-    # Cast Data Type Integer
-    total = int(total)
-    # Cast Uppercase to Wilayah
-    provinsi = provinsi.upper()
-    wilayah.append(provinsi)
-    pendapatan.append(total)
+    provinsi = provinsi.replace('\n ','')
+    if provinsi != 'Kalimantan Utara':
+        # Cast Data Type Integer
+        total = int(total)
+        # Cast Uppercase to Wilayah
+        provinsi = provinsi.upper()
+        wilayah.append(provinsi)
+        pendapatan.append(total)
 
 pendapatan_avg = round(mean(pendapatan),2)
 
 pendapatan_tinggi = []
 pendapatan_rendah = []
-
+jml_tinggi = []
+jml_rendah = []
 for i,v in enumerate(pendapatan):
     if(v > pendapatan_avg):
         pendapatan_tinggi.append(wilayah[i])
+        jml_tinggi.append([v])
     else:
         pendapatan_rendah.append(wilayah[i])
+        jml_rendah.append([v])
 
+print(pendapatan_tinggi)
 soup2 = func.crawlData('https://kawalpemilu.org/#0',second=10)
 # find results within table
 results2 = soup2.find('table',{'class':'table'})
 rows2 = results2.find_all('tr',{'class':'row'})
 # index 0 = tinggi, index1 = rendah
-jokowi = [0,0]
-prabowo = [0,0]
+jokowi_tinggi = []
+jokowi_rendah= []
+prabowo_tinggi = []
+prabowo_rendah= []
 
 # print(rows)
 for r in rows2:
@@ -65,47 +72,49 @@ for r in rows2:
     # Cast Data Type Integer
     satu = int(satu)
     dua = int(dua)
-    if wilayah in pendapatan_tinggi:
-        jokowi[0] +=satu
-        prabowo[0] +=dua
-    else:
-        jokowi[1]+=satu
-        prabowo[1]+=dua
+    if wilayah != 'Luar Negeri' and wilayah != 'KALIMANTAN UTARA':
+        if wilayah in pendapatan_tinggi:
+            print(wilayah)
+            jokowi_tinggi.append([satu])
+            prabowo_tinggi.append([dua])
+        else:
+            jokowi_rendah.append([satu])
+            prabowo_rendah.append([dua])
 
-# math percentage
-total = sum(jokowi) + sum (prabowo)
-satu_tinggi = jokowi[0] / total * 100
-jokowi[0] = satu_tinggi
-satu_rendah = jokowi[1] / total *100
-jokowi[1] = satu_rendah
-dua_tinggi= prabowo[0] / total * 100
-prabowo[0] = dua_tinggi
-dua_rendah = prabowo[1] / total * 100
-prabowo[1] = dua_rendah
 
 # Convert to numpy
 
-np_jokowi= np.array(jokowi)
-np_prabowo= np.array(prabowo)
-# plot data
-fig,ax = plt.subplots(figsize=(10,5))
-# print(ax)
-pos = list(range(len(np_jokowi)))
-width = 0.25
+np_jokowi= np.array(jokowi_tinggi)
+np_jokowi2= np.array(jokowi_rendah)
+np_prabowo= np.array(prabowo_tinggi)
+np_prabowo2= np.array(prabowo_rendah)
+np_tinggi = np.array(jml_tinggi)
+np_rendah= np.array(jml_rendah)
 
-rects1 = ax.bar(pos,np_jokowi,width,color='red',label='Jokowi 2019')
-rects2 = ax.bar([p + width for p in pos],np_prabowo,width,color='blue',label='Prabowo 2019')
-# ax.set_xticks(ind)
-ax.set_xticks([p + 0.5 * width for p in pos])
-ax.set_xticklabels(['High Income','Low Income'])
-# # Naming label
-plt.xlabel('Income Type')
-plt.ylabel('Vote Percentage')
+func.do_regress(np_tinggi,np_jokowi,xlabel="Tingkat Pendapatan Diatas Rata-Rata Nasional",ylabel="Persentase Suara Jokowi Per Provinsi")
+func.do_regress(np_rendah,np_jokowi2,xlabel="Tingkat Pendapatan Dibawah Rata-Rata Nasional",ylabel="Persentase Suara Jokowi Per Provinsi")
+func.do_regress(np_tinggi,np_prabowo,xlabel="Tingkat Pendapatan Diatas Rata-Rata Nasional",ylabel="Persentase Suara Prabowo Per Provinsi")
+func.do_regress(np_rendah,np_prabowo2,xlabel="Tingkat Pendapatan Dibawah Rata-Rata Nasional",ylabel="Persentase Suara Prabowo Per Provinsi")
 
-func.setPlotText(np.round(np_jokowi,2), x=0, y=0.6, val='%', halign='center')
-func.setPlotText(np.round(np_prabowo,2), x=width, y=0.6, val='%', halign='center')
-# # styling x,y value
-plt.yticks(np.arange(np_jokowi.min(),np_jokowi.max(),4000000))
-plt.legend(loc='upper right')
-plt.yscale('linear')
-plt.show()
+# # plot data
+# fig,ax = plt.subplots(figsize=(10,5))
+# # print(ax)
+# pos = list(range(len(np_jokowi)))
+# width = 0.25
+#
+# rects1 = ax.bar(pos,np_jokowi,width,color='red',label='Jokowi 2019')
+# rects2 = ax.bar([p + width for p in pos],np_prabowo,width,color='blue',label='Prabowo 2019')
+# # ax.set_xticks(ind)
+# ax.set_xticks([p + 0.5 * width for p in pos])
+# ax.set_xticklabels(['High Income','Low Income'])
+# # # Naming label
+# plt.xlabel('Income Type')
+# plt.ylabel('Vote Percentage')
+#
+# func.setPlotText(np.round(np_jokowi,2), x=0, y=0.6, val='%', halign='center')
+# func.setPlotText(np.round(np_prabowo,2), x=width, y=0.6, val='%', halign='center')
+# # # styling x,y value
+# plt.yticks(np.arange(np_jokowi.min(),np_jokowi.max(),4000000))
+# plt.legend(loc='upper right')
+# plt.yscale('linear')
+# plt.show()
